@@ -101,6 +101,26 @@
     .about .x { float: right; font-size: 18px; color: var(--mid); line-height: 1; }
     .about .x:hover { color: var(--ink); }
 
+    @media (min-width: 700px) {
+      .app { max-width: 650px; }
+      .who b { font-size: 19px; }
+      .who span { font-size: 11.5px; }
+      .tbtn.play { width: 40px; height: 40px; }
+      .tbtn.stop { width: 30px; height: 30px; }
+      .tbtn svg { width: 13px; height: 13px; }
+      .tbtn.stop svg { width: 9px; height: 9px; }
+      .row { gap: 14px; padding: 14px 15px; }
+      .plate .inner { font-size: 17px; min-height: 48px; }
+      .well { gap: 14px; padding: 14px; }
+      .knob { width: 23px; height: 23px; }
+      .knob i { height: 7px; transform-origin: 0.75px 9.5px; }
+      .mute { width: 15px; height: 11px; }
+      .fader { max-width: 150px; height: 22px; }
+      .fader .cap { width: 13px; height: 22px; margin: -11px 0 0 -6.5px; }
+      .foot { font-size: 10px; margin-top: 16px; }
+      .foot button { font-size: 10px; }
+      input[type=range].vol { width: 86px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .tbtn.play.pulse { animation: none; }
       .plate, .tbtn { transition: none; }
