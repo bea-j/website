@@ -4,80 +4,424 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Beatrice Jiang</title>
+  <meta name="description" content="Beatrice Jiang. MIT Electrical Engineering with Computing. A small console that plays an ambient piece generated from the letters of her name.">
+  <meta property="og:title" content="Beatrice Jiang">
+  <meta property="og:description" content="EECS at MIT ('29), prev. hardware intern at Arm. A console that plays her name.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://beatricejiang.com/">
+  <meta property="og:image" content="https://beatricejiang.com/social.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://beatricejiang.com/social.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      background: #fff;
-      color: #333;
-      font-family: "Times New Roman", Times, serif;
-      font-size: 20px;
-      line-height: 1.5;
+    :root {
+      --paper: #eceae4;
+      --face: #faf9f6;
+      --well: #f1efe9;
+      --well-edge: #dedbd3;
+      --rec: #e0ddd5;
+      --line: #d8d4cc;
+      --mid: #8d8880;
+      --ink: #1c1c1b;
+      --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     }
-    main {
-      width: fit-content;
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 100px 24px;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); font-family: var(--mono); font-size: 13px; -webkit-font-smoothing: antialiased; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    a { color: var(--ink); text-decoration: none; }
+
+    .app { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; max-width: 560px; margin: 0 auto; padding: 22px 18px; }
+
+    /* header */
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .who { display: flex; flex-direction: column; line-height: 1.45; min-width: 0; }
+    .who b { font-size: 15px; font-weight: 700; letter-spacing: 2px; white-space: nowrap; }
+    .who span { font-size: 9px; color: var(--mid); letter-spacing: 1.2px; white-space: nowrap; }
+    .transport { display: flex; gap: 8px; align-items: center; flex: none; }
+    .tbtn { border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--ink); background: var(--face); box-shadow: 0 1.5px 0 rgba(28,28,27,.3); }
+    .tbtn:active { transform: translateY(1px); box-shadow: 0 0.5px 0 rgba(28,28,27,.3); }
+    .tbtn.play { width: 34px; height: 34px; }
+    .tbtn.stop { width: 26px; height: 26px; }
+    .tbtn svg { width: 11px; height: 11px; fill: var(--ink); }
+    .tbtn.stop svg { width: 8px; height: 8px; }
+    .tbtn.play.on { background: var(--ink); }
+    .tbtn.play.on svg { fill: var(--face); }
+    .tbtn.play.pulse { animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { box-shadow: 0 1.5px 0 rgba(28,28,27,.3), 0 0 0 5px rgba(28,28,27,.08); } }
+
+    /* chassis */
+    .chassis { background: var(--face); border: 1px solid var(--ink); border-radius: 12px; box-shadow: 0 4px 0 rgba(28,28,27,.25), inset 0 1px 0 #fff; overflow: hidden; }
+    .row { display: flex; align-items: center; gap: 12px; padding: 12px 13px; border-bottom: 1px solid var(--line); }
+    .apron { height: 12px; background: var(--rec); border-top: 1px solid var(--ink); }
+
+    /* plate (the link) */
+    .plate { flex: 1.5; min-width: 0; background: #fff; border: 1px solid var(--ink); border-radius: 5px; padding: 5px; box-shadow: 0 3px 0 rgba(28,28,27,.28); transition: transform .06s, box-shadow .06s; }
+    .plate .inner { position: relative; display: flex; align-items: center; justify-content: center; min-height: 40px; border: 1px solid var(--line); border-radius: 3px; padding: 6px 14px 6px 8px; font-size: 15px; font-weight: 700; letter-spacing: 2px; text-align: center; white-space: nowrap; }
+    .plate .inner i { position: absolute; top: 3px; right: 5px; font-style: normal; font-size: 9px; color: var(--mid); opacity: 0; transition: opacity .12s; }
+    .plate:hover .inner, .plate:focus-visible .inner { border-color: var(--ink); }
+    .plate:hover .inner i, .plate:focus-visible .inner i { opacity: 1; }
+    .plate:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(28,28,27,.28); }
+    .plate.sm .inner { font-size: 12.5px; letter-spacing: 1.4px; }
+
+    /* hardware well */
+    .well { flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--well); border: 1px solid var(--well-edge); border-radius: 6px; box-shadow: inset 0 1.5px 3px rgba(28,28,27,.1); padding: 12px 12px; }
+    .knob { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 1px solid var(--ink); position: relative; cursor: ns-resize; touch-action: none; background: radial-gradient(circle at 42% 36%, #fff, var(--face) 62%, #e8e5de); box-shadow: 0 1px 1px rgba(28,28,27,.3); }
+    .knob i { position: absolute; left: 50%; top: 2px; width: 1.5px; height: 6px; margin-left: -0.75px; background: var(--ink); transform: rotate(var(--rot, 0deg)); transform-origin: 0.75px 8px; }
+    .mute { width: 13px; height: 10px; flex: none; border-radius: 2px; border: 1px solid var(--ink); background: linear-gradient(var(--face), #e9e6df); box-shadow: 0 1px 0 rgba(28,28,27,.3); }
+    .mute.on { background: var(--ink); }
+    .fader { position: relative; flex: 1; max-width: 120px; height: 20px; cursor: ew-resize; touch-action: none; }
+    .fader .tick { position: absolute; bottom: 100%; margin-bottom: 1px; width: 1px; }
+    .fader::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; background: var(--rec); border-radius: 3px; box-shadow: inset 0 1.5px 2px rgba(28,28,27,.4); }
+    .fader::after { content: ""; position: absolute; left: 3px; right: 3px; top: 50%; height: 1px; background: var(--ink); }
+    .fader .cap { position: absolute; left: 50%; top: 50%; width: 12px; height: 20px; margin: -10px 0 0 -6px; border: 1px solid var(--ink); border-radius: 2px; background: linear-gradient(90deg, var(--face), #e3e0d9); box-shadow: 0 1.5px 1.5px rgba(28,28,27,.35); z-index: 1; }
+    .fader .cap::after { content: ""; position: absolute; top: 4px; bottom: 4px; left: 50%; width: 1.5px; margin-left: -0.75px; background: var(--ink); }
+
+    /* footer */
+    .foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; font-size: 9px; color: var(--mid); letter-spacing: 1.5px; }
+    .foot button { font-size: 9px; letter-spacing: 1.5px; color: var(--mid); border-bottom: 1px solid var(--line); padding-bottom: 1px; }
+    .foot button:hover { color: var(--ink); border-color: var(--ink); }
+    .mvol { display: flex; align-items: center; gap: 7px; }
+    input[type=range].vol { -webkit-appearance: none; appearance: none; width: 74px; height: 12px; background: transparent; cursor: pointer; }
+    input[type=range].vol::-webkit-slider-runnable-track { height: 1px; background: var(--mid); }
+    input[type=range].vol::-moz-range-track { height: 1px; background: var(--mid); }
+    input[type=range].vol::-webkit-slider-thumb { -webkit-appearance: none; width: 9px; height: 9px; margin-top: -4px; border-radius: 50%; background: var(--ink); border: 0; }
+    input[type=range].vol::-moz-range-thumb { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); border: 0; }
+
+    /* about overlay */
+    .about-bg { position: fixed; inset: 0; background: rgba(28,28,27,.3); display: none; place-items: center; z-index: 10; padding: 18px; }
+    .about-bg.open { display: grid; }
+    .about { max-width: 440px; max-height: 84vh; overflow-y: auto; background: var(--face); border: 1px solid var(--ink); border-radius: 12px; padding: 22px 24px; line-height: 1.7; font-size: 12px; }
+    .about h2 { margin: 0 0 10px; font-size: 14px; letter-spacing: 1px; }
+    .about p { margin: 0 0 10px; }
+    .about ul { margin: 0 0 10px; padding-left: 16px; }
+    .about li { margin-bottom: 6px; }
+    .about .x { float: right; font-size: 18px; color: var(--mid); line-height: 1; }
+    .about .x:hover { color: var(--ink); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tbtn.play.pulse { animation: none; }
+      .plate, .tbtn { transition: none; }
     }
-    h1 {
-      font-size: 35px;
-      font-weight: 600;
-      margin: 0 0 4px;
-      white-space: nowrap;
-    }
-    .subtitle {
-      color: #666;
-      margin: 0 0 32px;
-    }
-    ul {
-      list-style-type: "-  ";
-      padding-left: 18px;
-      margin: 0;
-    }
-    li {
-      margin-bottom: 20px;
-    }
-    a {
-      color: inherit;
-      text-decoration: none;
-      border-bottom: 1px solid #bbb;
-    }
-    a:hover {
-      border-bottom-color: #333;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 15px;
-      }
-      main {
-        padding: 48px 20px;
-      }
-      h1 {
-        font-size: min(28px, 7.5vw);
-      }
-      .subtitle {
-        margin-bottom: 20px;
-      }
-      li {
-        margin-bottom: 12px;
-      }
+    @media (max-width: 480px) {
+      .app { padding: 14px 10px; }
+      .row { gap: 8px; padding: 10px 9px; }
+      .plate { flex: 1.35; }
+      .plate .inner { font-size: 12.5px; letter-spacing: 1.2px; min-height: 36px; padding: 5px 12px 5px 6px; }
+      .plate.sm .inner { font-size: 10px; letter-spacing: .8px; }
+      .well { gap: 9px; padding: 10px 9px; }
+      .who b { font-size: 13px; letter-spacing: 1.5px; }
+      .who span { font-size: 8px; }
+      .foot { flex-wrap: wrap; row-gap: 6px; }
     }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Hello I'm Beatrice Jiang</h1>
-    <p class="subtitle">Prev. Hardware Engineer Intern at <a href="https://www.arm.com">Arm</a></p>
-    <ul>
-      <li>Electrical Engineering with Computing at MIT ('29)</li>
-      <li>
-        <a href="mailto:beajiang@mit.edu">Email</a> /
-        <a href="https://www.linkedin.com/in/beatrice-jiang">LinkedIn</a> /
-        <a href="https://scholar.google.com/citations?user=cETi7YUAAAAJ&amp;hl=en">Google Scholar</a> /
-        <a href="https://drive.google.com/file/d/15VmttZTTSqz11dAK5_kffS83bzNz40QA/view?usp=sharing" target="_blank">Resume</a>
-      </li>
-    </ul>
-  </main>
+  <div class="app">
+    <header class="top">
+      <div class="who"><b>BEATRICE JIANG</b><span>EECS AT MIT &rsquo;29 &middot; PREV. HARDWARE INTERN @ ARM</span></div>
+      <div class="transport">
+        <button class="tbtn play pulse" id="playBtn" aria-label="Play"><svg viewBox="0 0 16 16"><path d="M4.5 2.5l9 5.5-9 5.5z"/></svg></button>
+        <button class="tbtn stop" id="stopBtn" aria-label="Stop"><svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1"/></svg></button>
+      </div>
+    </header>
+
+    <main class="chassis" id="chassis"></main>
+
+    <footer class="foot">
+      <button id="sndBtn" aria-live="polite">SOUND OFF</button>
+      <label class="mvol">VOL <input type="range" class="vol" id="masterVol" min="0" max="100" value="80" aria-label="Master volume"></label>
+      <button id="aboutBtn">HOW THIS WORKS</button>
+    </footer>
+  </div>
+
+  <div class="about-bg" id="aboutBg">
+    <div class="about" role="dialog" aria-modal="true" aria-label="How it works">
+      <button class="x" id="aboutX" aria-label="Close">&times;</button>
+      <h2>HOW THIS WORKS</h2>
+      <p>Synthesized live from the letters of &ldquo;BEATRICE JIANG&rdquo;.</p><div style="border:1px solid var(--line);border-radius:6px;padding:12px 10px 10px;margin:12px 0 2px;background:#fff"><div style="display:flex;gap:3px"><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:14%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">B</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">2</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">E</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:72%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);box-sizing:border-box;"></i></span><b style="font-size:10px">E</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">5</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">A</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:49%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);box-sizing:border-box;"></i></span><b style="font-size:10px">A</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">1</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">D</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:37%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">T</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">20</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">B</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:26%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">R</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">18</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">G</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:55%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);box-sizing:border-box;"></i></span><b style="font-size:10px">I</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">9</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">E</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:20%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">C</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">3</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">F&#9839;</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:72%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);box-sizing:border-box;"></i></span><b style="font-size:10px">E</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">5</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">A</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:20%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">J</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">10</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">F&#9839;</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:55%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);box-sizing:border-box;"></i></span><b style="font-size:10px">I</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">9</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">E</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:49%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#fff;border:1.5px solid var(--ink);box-sizing:border-box;"></i></span><b style="font-size:10px">A</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">1</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">D</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:43%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">N</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">14</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">C&#9839;</s></span><span style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0"><span style="position:relative;width:100%;height:52px;border-bottom:1px solid var(--line)"><i style="position:absolute;left:50%;bottom:43%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ink);"></i></span><b style="font-size:10px">G</b><u style="text-decoration:none;font-size:8px;color:var(--mid)">7</u><s style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:8.5px;color:var(--mid)">C&#9839;</s></span></div><div style="display:flex;justify-content:space-between;margin-top:9px;font-size:8.5px;color:var(--mid);letter-spacing:.5px"><span>SUM 104 BPM</span><span>&#9675; VOWELS UP AN OCTAVE</span></div></div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var STRIPS = [
+      { id: "resume",   label: "RESUME",         voice: "keys",  href: "https://drive.google.com/file/d/15VmttZTTSqz11dAK5_kffS83bzNz40QA/view?usp=sharing" },
+      { id: "linkedin", label: "LINKEDIN",       voice: "pulse", href: "https://www.linkedin.com/in/beatrice-jiang" },
+      { id: "scholar",  label: "GOOGLE SCHOLAR", voice: "pad",   href: "https://scholar.google.com/citations?user=cETi7YUAAAAJ&hl=en" },
+      { id: "email",    label: "EMAIL",          voice: "drone", href: "mailto:beajiang@mit.edu", mail: true }
+    ];
+
+    // ---------- music ----------
+    var BPM = 104, STEP = 60 / BPM / 2, BARLEN = STEP * 16;
+    var MAJ = [0, 2, 4, 5, 7, 9, 11], ROOT = 50; // D3
+    function pos(c) { return c.charCodeAt(0) - 64; }
+    function deg(c) { return (pos(c) - 1) % 7; }
+    function sn(d) { return MAJ[((d % 7) + 7) % 7] + 12 * Math.floor(d / 7); }
+    function euclid(k, n) { var a = []; for (var i = 0; i < n; i++) a.push(((i * k) % n) < k); return a; }
+    function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+    var ROOT_DEG = "BEATRICE".split("").map(deg);
+    function chord(bar) { var d = ROOT_DEG[bar % 8]; return [d, d + 2, d + 4, d + 7].map(function (x) { return ROOT + sn(x); }); }
+    function rootLow(bar) { return ROOT - 12 + sn(ROOT_DEG[bar % 8]); }
+    var PULSE = euclid(5, 16);
+    var NAME = "BEATRICEJIANG", MEL_HITS = euclid(13, 32), MEL = new Array(32).fill(null);
+    (function () {
+      var n = 0;
+      for (var i = 0; i < 32; i++) if (MEL_HITS[i]) {
+        var c = NAME[n++];
+        MEL[i] = ROOT + 12 + sn(deg(c)) + ("AEIOU".indexOf(c) >= 0 ? 12 : 0);
+      }
+    })();
+    var AUTO = "JIANG".split("").map(function (c) { return pos(c) / 14; });
+    function autoAt(barF) {
+      var seg = Math.min(3.9999, Math.max(0, (barF % 32) / 8)), k = Math.floor(seg), f = seg - k;
+      var w = (1 - Math.cos(Math.PI * f)) / 2;
+      return AUTO[k] + (AUTO[k + 1] - AUTO[k]) * w;
+    }
+
+    // ---------- state ----------
+    var state = STRIPS.map(function () { return { vol: 0.8, pan: 0, mute: false }; });
+    var masterVol = 0.8;
+
+    // ---------- audio ----------
+    var ctx = null, master = null, nodes = {}, noiseBuf = null, drone = null, verbIn = null, padFilter = null;
+    var playing = false, curStep = 0, nextTime = 0, timer = null;
+    function gainOf(v) { return Math.pow(v / 0.8, 2); }
+
+    function initAudio() {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      ctx = new AC();
+      var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 2.2;
+      var warm = ctx.createBiquadFilter(); warm.type = "lowpass"; warm.frequency.value = 6500;
+      master = ctx.createGain(); master.gain.value = gainOf(masterVol);
+      master.connect(warm); warm.connect(comp); comp.connect(ctx.destination);
+
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      var d = noiseBuf.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+
+      var len = Math.floor(ctx.sampleRate * 5.5), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (var c = 0; c < 2; c++) { var ch = ir.getChannelData(c); for (var j = 0; j < len; j++) ch[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 3.1); }
+      var conv = ctx.createConvolver(); conv.buffer = ir;
+      verbIn = ctx.createGain();
+      var verbLP = ctx.createBiquadFilter(); verbLP.type = "lowpass"; verbLP.frequency.value = 3200;
+      var verbOut = ctx.createGain(); verbOut.gain.value = 0.85;
+      verbIn.connect(conv); conv.connect(verbLP); verbLP.connect(verbOut); verbOut.connect(master);
+
+      var SENDS = { drone: 0.18, pulse: 0.12, pad: 0.55, keys: 0.6 };
+      STRIPS.forEach(function (s) {
+        var input = ctx.createGain(), vol = ctx.createGain(), mute = ctx.createGain(), send = ctx.createGain();
+        var pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+        send.gain.value = SENDS[s.voice];
+        input.connect(vol); vol.connect(mute);
+        if (pan) { mute.connect(pan); pan.connect(master); } else mute.connect(master);
+        mute.connect(send); send.connect(verbIn);
+        nodes[s.voice] = { input: input, vol: vol, mute: mute, pan: pan };
+      });
+
+      padFilter = ctx.createBiquadFilter(); padFilter.type = "lowpass"; padFilter.Q.value = 0.8; padFilter.frequency.value = 900;
+      padFilter.connect(nodes.pad.input);
+
+      var dly = ctx.createDelay(2), fb = ctx.createGain(), lp = ctx.createBiquadFilter(), wet = ctx.createGain();
+      dly.delayTime.value = STEP * 3; fb.gain.value = 0.35; lp.type = "lowpass"; lp.frequency.value = 1600; wet.gain.value = 0.55;
+      nodes.keys.send2 = ctx.createGain();
+      nodes.keys.send2.connect(nodes.keys.input); nodes.keys.send2.connect(dly);
+      dly.connect(lp); lp.connect(fb); fb.connect(dly); lp.connect(wet); wet.connect(nodes.keys.input);
+
+      applyAll();
+    }
+
+    function applyAll() {
+      if (!ctx) return;
+      var t = ctx.currentTime;
+      master.gain.setTargetAtTime(gainOf(masterVol), t, 0.03);
+      STRIPS.forEach(function (s, i) {
+        var n = nodes[s.voice], st = state[i];
+        n.vol.gain.setTargetAtTime(gainOf(st.vol), t, 0.03);
+        n.mute.gain.setTargetAtTime(st.mute ? 0 : 1, t, 0.05);
+        if (n.pan) n.pan.pan.setTargetAtTime(st.pan, t, 0.03);
+      });
+    }
+
+    function startDrone(t) {
+      var f = mtof(ROOT), merger = ctx.createChannelMerger(2), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      lp.type = "lowpass"; lp.frequency.value = 520;
+      var l = ctx.createOscillator(), r = ctx.createOscillator();
+      l.type = r.type = "sine";
+      l.frequency.value = f; r.frequency.value = f + pos("J");
+      var lg = ctx.createGain(), rg = ctx.createGain(); lg.gain.value = rg.gain.value = 0.17;
+      l.connect(lg); r.connect(rg); lg.connect(merger, 0, 0); rg.connect(merger, 0, 1);
+      var fifth = ctx.createOscillator(), fg = ctx.createGain(); fifth.type = "triangle"; fifth.frequency.value = mtof(ROOT + 7); fg.gain.value = 0.03; fifth.connect(fg); fg.connect(lp);
+      var n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
+      var nf = ctx.createBiquadFilter(); nf.type = "lowpass"; nf.frequency.value = 650;
+      var ng = ctx.createGain(); ng.gain.value = 0.016;
+      var lfo = ctx.createOscillator(), lfg = ctx.createGain(); lfo.frequency.value = 0.05; lfg.gain.value = 0.012;
+      lfo.connect(lfg); lfg.connect(ng.gain);
+      n.connect(nf); nf.connect(ng); ng.connect(g);
+      merger.connect(lp); lp.connect(g); g.connect(nodes.drone.input);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(1, t + 5);
+      [l, r, fifth, n, lfo].forEach(function (o) { o.start(t); });
+      drone = { g: g, srcs: [l, r, fifth, n, lfo] };
+    }
+    function stopDrone() {
+      if (!drone) return;
+      var t = ctx.currentTime, d = drone; drone = null;
+      d.g.gain.cancelScheduledValues(t); d.g.gain.setTargetAtTime(0.0001, t, 0.5);
+      d.srcs.forEach(function (o) { o.stop(t + 3); });
+    }
+    function pulse(t, m, accent) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      o.type = "sine"; o.frequency.value = mtof(m);
+      lp.type = "lowpass"; lp.frequency.value = 150;
+      var pk = accent ? 0.4 : 0.3;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(pk, t + 0.16);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+      o.connect(lp); lp.connect(g); g.connect(nodes.pulse.input); o.start(t); o.stop(t + 1.7);
+    }
+    function pad(t, notes) {
+      var hold = BARLEN, rel = 4;
+      notes.forEach(function (m, k) {
+        [-5, 5].forEach(function (cents) {
+          var o = ctx.createOscillator(), g = ctx.createGain(), lvl = k === 3 ? 0.011 : 0.02;
+          o.type = "sawtooth"; o.frequency.value = mtof(m); o.detune.value = cents;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.linearRampToValueAtTime(lvl, t + 2.6);
+          g.gain.setValueAtTime(lvl, t + hold);
+          g.gain.linearRampToValueAtTime(0.0001, t + hold + rel);
+          o.connect(g); g.connect(padFilter); o.start(t); o.stop(t + hold + rel + 0.1);
+        });
+      });
+    }
+    function keyNote(t, m) {
+      var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), g2 = ctx.createGain(), lp = ctx.createBiquadFilter();
+      o.type = "triangle"; o.frequency.value = mtof(m);
+      o2.type = "sine"; o2.frequency.value = mtof(m) * 2; g2.gain.value = 0.07;
+      lp.type = "lowpass"; lp.frequency.setValueAtTime(1300, t); lp.frequency.exponentialRampToValueAtTime(550, t + 2);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.08, t + 0.5);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 3.6);
+      o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); g.connect(nodes.keys.send2);
+      o.start(t); o2.start(t); o.stop(t + 3.7); o2.stop(t + 3.7);
+    }
+
+    function scheduleStep(s, t) {
+      var bar = Math.floor(s / 16), i = s % 16;
+      if (PULSE[i]) pulse(t, rootLow(bar), i === 0);
+      if (i === 0) pad(t, chord(bar));
+      var m = MEL[s % 32]; if (m !== null) keyNote(t, m);
+      padFilter.frequency.setTargetAtTime(260 * Math.pow(2, autoAt(s / 16) * 3.4), t, 0.6);
+    }
+    function tick() {
+      while (nextTime < ctx.currentTime + 0.15) {
+        scheduleStep(curStep, nextTime);
+        nextTime += STEP;
+        curStep = (curStep + 1) % 512;
+      }
+    }
+
+    var playBtn = document.getElementById("playBtn");
+    var sndBtn = document.getElementById("sndBtn");
+    var PLAY = '<svg viewBox="0 0 16 16"><path d="M4.5 2.5l9 5.5-9 5.5z"/></svg>';
+    var PAUSE = '<svg viewBox="0 0 16 16"><rect x="4" y="3" width="2.6" height="10"/><rect x="9.4" y="3" width="2.6" height="10"/></svg>';
+    function play() {
+      if (!ctx) initAudio();
+      if (ctx.state === "suspended") ctx.resume();
+      if (playing) return;
+      playing = true;
+      nextTime = ctx.currentTime + 0.08;
+      startDrone(nextTime);
+      timer = setInterval(tick, 25); tick();
+      playBtn.classList.add("on"); playBtn.classList.remove("pulse");
+      playBtn.setAttribute("aria-label", "Pause"); playBtn.innerHTML = PAUSE;
+      sndBtn.textContent = "SOUND ON";
+    }
+    function pause() {
+      if (!playing) return;
+      playing = false; clearInterval(timer); stopDrone();
+      playBtn.classList.remove("on"); playBtn.setAttribute("aria-label", "Play"); playBtn.innerHTML = PLAY;
+      sndBtn.textContent = "SOUND OFF";
+    }
+    function stop() { pause(); curStep = 0; }
+
+    // ---------- build rows ----------
+    var chassis = document.getElementById("chassis");
+    STRIPS.forEach(function (sdef, i) {
+      var row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        '<a class="plate' + (sdef.label.length > 10 ? ' sm' : '') + '" href="' + sdef.href + '"' + (sdef.mail ? '' : ' target="_blank" rel="noopener"') + '><span class="inner">' + sdef.label + '<i>&#8599;</i></span></a>' +
+        '<span class="well">' +
+        '<span class="knob" role="slider" aria-label="' + sdef.label + ' pan" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" tabindex="0"><i></i></span>' +
+        '<button class="mute" aria-label="Mute ' + sdef.label + '" aria-pressed="false"></button>' +
+        '<span class="fader" aria-label="' + sdef.label + ' level"><span class="cap"></span></span>' +
+        '</span>';
+      chassis.appendChild(row);
+      for (var k = 0; k <= 4; k++) {
+        var tk = document.createElement("i"); tk.className = "tick";
+        tk.style.cssText = "left:" + (k * 25) + "%;height:" + (k % 2 ? 3 : 4) + "px;background:" + (k % 2 ? "var(--line)" : "var(--mid)") + ";position:absolute;bottom:100%;margin-bottom:1px;width:1px;";
+        row.querySelector(".fader").appendChild(tk);
+      }
+      var knob = row.querySelector(".knob"), mute = row.querySelector(".mute"), fader = row.querySelector(".fader"), cap = row.querySelector(".cap");
+
+      mute.addEventListener("click", function () {
+        state[i].mute = !state[i].mute;
+        mute.classList.toggle("on", state[i].mute);
+        mute.setAttribute("aria-pressed", state[i].mute);
+        applyAll();
+      });
+
+      function setCap() {
+        cap.style.left = (state[i].vol * 100) + "%";
+        cap.style.marginLeft = (-6 - (state[i].vol - 0.5) * 0) + "px";
+        knob.style.setProperty("--rot", (state[i].pan * 135) + "deg");
+        knob.setAttribute("aria-valuenow", Math.round(state[i].pan * 100));
+      }
+      function faderFromX(x) {
+        var r = fader.getBoundingClientRect();
+        state[i].vol = Math.max(0, Math.min(1, (x - r.left) / r.width));
+        setCap(); applyAll();
+      }
+      var dragging = false;
+      fader.addEventListener("pointerdown", function (e) { e.preventDefault(); dragging = true; fader.setPointerCapture(e.pointerId); faderFromX(e.clientX); });
+      fader.addEventListener("pointermove", function (e) { if (dragging) faderFromX(e.clientX); });
+      fader.addEventListener("pointerup", function () { dragging = false; });
+      fader.addEventListener("dblclick", function () { state[i].vol = 0.8; setCap(); applyAll(); });
+
+      var ky = 0, kp = 0, kdrag = false;
+      knob.addEventListener("pointerdown", function (e) { e.preventDefault(); kdrag = true; ky = e.clientY; kp = state[i].pan; knob.setPointerCapture(e.pointerId); });
+      knob.addEventListener("pointermove", function (e) { if (!kdrag) return; state[i].pan = Math.max(-1, Math.min(1, kp - (e.clientY - ky) / 70)); setCap(); applyAll(); });
+      knob.addEventListener("pointerup", function () { kdrag = false; });
+      knob.addEventListener("dblclick", function () { state[i].pan = 0; setCap(); applyAll(); });
+
+      setCap();
+    });
+    var apron = document.createElement("div"); apron.className = "apron"; chassis.appendChild(apron);
+    var lastRow = chassis.querySelectorAll(".row"); lastRow[lastRow.length - 1].style.borderBottom = "0";
+
+    // ---------- chrome ----------
+    var mv = document.getElementById("masterVol");
+    mv.addEventListener("input", function () { masterVol = mv.value / 100; applyAll(); });
+
+    var aboutBg = document.getElementById("aboutBg");
+    document.getElementById("aboutBtn").addEventListener("click", function () { aboutBg.classList.add("open"); });
+    document.getElementById("aboutX").addEventListener("click", function () { aboutBg.classList.remove("open"); });
+    aboutBg.addEventListener("click", function (e) { if (e.target === aboutBg) aboutBg.classList.remove("open"); });
+
+    playBtn.addEventListener("click", function () { playing ? pause() : play(); });
+    sndBtn.addEventListener("click", function () { playing ? pause() : play(); });
+    document.getElementById("stopBtn").addEventListener("click", stop);
+    document.addEventListener("keydown", function (e) {
+      if (e.code === "Space" && !/^(INPUT|TEXTAREA|BUTTON|A)$/.test(document.activeElement.tagName)) { e.preventDefault(); playing ? pause() : play(); }
+      if (e.key === "Escape") aboutBg.classList.remove("open");
+    });
+  })();
+  </script>
+
   <script data-goatcounter="https://beajiang.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <script>
     var sc_project = 13358837;
